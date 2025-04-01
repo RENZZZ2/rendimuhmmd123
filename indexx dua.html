@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crop Atas & Download ZIP</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 30px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 24px;
+    }
+    label {
+      margin-top: 12px;
+      font-weight: 500;
+      color: #444;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 12px;
+      transition: border-color 0.3s;
+    }
+    input:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out, transform 0.1s;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+  <h2>Crop Bagian Atas Gambar & Download ZIP</h2>
+  <label>Awalan Nama File:</label>
+  <input type="text" id="prefix" placeholder="Misalnya: Foto_" />
+
+  <label>Nomor Awal:</label>
+  <input type="number" id="startNumber" value="1" min="1" />
+
+  <label>Pilih Gambar (bisa banyak):</label>
+  <input type="file" id="images" multiple accept="image/*" />
+
+  <button onclick="processImages()">Proses & Download ZIP</button>
+
+  <script>
+    async function processImages() {
+      const files = document.getElementById('images').files;
+      const prefix = document.getElementById('prefix').value || 'Foto_';
+      const startNumber = parseInt(document.getElementById('startNumber').value) || 1;
+
+      if (files.length === 0) return alert('Pilih minimal 1 gambar.');
+
+      const zip = new JSZip();
+      let count = 0;
+
+      for (let file of files) {
+        const img = await createImageBitmap(file);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const cropHeight = 250; // crop 250px dari atas
+        canvas.width = img.width;
+        canvas.height = img.height - cropHeight;
+        ctx.drawImage(img, 0, cropHeight);
+
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg'));
+        const filename = `${prefix}${startNumber + count}.jpg`;
+        zip.file(filename, blob);
+        count++;
+      }
+
+      zip.generateAsync({ type: 'blob' }).then(content => {
+        saveAs(content, 'hasil_crop.zip');
+      });
+    }
+  </script>
+</body>
+</html>
